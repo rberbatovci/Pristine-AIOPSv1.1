@@ -1,0 +1,315 @@
+version: '3.8'
+
+networks:
+  aiops:
+    driver: bridge
+
+services:
+  backend:
+    container_name: FastAPI
+    image: ghcr.io/rberbatovci/backend:latest
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - shared-mibs:/app/traps/producer/mibs
+    networks:
+      - aiops
+    entrypoint: ["/app/entrypoint.sh"]
+
+  frontend:
+    container_name: ReactJS
+    image: ghcr.io/rberbatovci/frontend:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend:/app
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    networks:
+      - aiops
+
+  postgresql:
+    image: postgres:15
+    container_name: PostgreSQL
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: PristineAdmin
+      POSTGRES_PASSWORD: PristinePassword
+      POSTGRES_DB: fpristine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+      - ./postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U PristineAdmin -d fpristine"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aiops
+
+  kafka:
+    container_name: Kafka
+    image: wurstmeister/kafka:latest
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,INTERNAL://kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,INTERNAL://0.0.0.0:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: "telemetry-signals:1:1,cpu-utilization:1:1,memory-statistics:1:1,interface-statistics:1:1,bgp-connections:1:1,isis-statistics:1:1,syslog-events:1:1,trap-events:1:1,netflow-events:1:1,syslog-signals:1:1,trap-signals:1:1"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS: 50
+      KAFKA_BROKER_ID: 1
+      KAFKA_NUM_PARTITIONS: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+    ports:
+      - "9092:9092"
+    depends_on:
+      zookeeper:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aiops
+
+  zookeeper:
+    container_name: Zookeeper
+    image: bitnami/zookeeper:latest
+    ports:
+      - "2181:2181"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    healthcheck:
+      test: ["CMD", "zkServer.sh", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aiops
+
+  opensearch:
+    image: opensearchproject/opensearch:1.0.1
+    container_name: OpenSearch
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node1
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - DISABLE_SECURITY_PLUGIN=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - ./opensearch/config/opensearch.yml:/usr/share/opensearch/config/opensearch.yml
+      - ./opensearch/config/jvm.options:/usr/share/opensearch/config/jvm.options
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    ports:
+      - 9200:9200
+      - 9600:9600
+    networks:
+      - aiops
+
+  syslog-producer:
+    container_name: SyslogProducer
+    image: ghcr.io/rberbatovci/syslog-producer:latest
+    environment:
+      SYSLOG_PORT: ${SYSLOG_PORT:-1160}
+      DATA_FLUSH_INTERVAL: ${DATA_FLUSH_INTERVAL:-1}
+      DATA_FLUSH_SIZE: ${DATA_FLUSH_SIZE:-100}
+    ports:
+      - "1160:1160/udp"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - aiops
+
+  syslog-consumer:
+    container_name: SyslogConsumer
+    image: ghcr.io/rberbatovci/syslog-consumer:latest
+    environment:
+      KAFKA_BROKER: kafka:9092
+      KAFKA_EVENTS_TOPIC: syslog-events
+      KAFKA_SIGNALS_TOPIC: syslog-signals
+      DATA_FLUSH_INTERVAL: ${DATA_FLUSH_INTERVAL:-1}
+      DATA_FLUSH_SIZE: ${DATA_FLUSH_SIZE:-100}
+    depends_on:
+      kafka:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
+    networks:
+      - aiops
+    restart: unless-stopped
+
+  syslog-signals:
+    container_name: SyslogSignals
+    image: ghcr.io/rberbatovci/syslog-signals:latest
+    environment:
+      KAFKA_BROKER: kafka:9092
+      KAFKA_SIGNALS_TOPIC: syslog-signals
+      DATA_FLUSH_INTERVAL: ${DATA_FLUSH_INTERVAL:-1}
+      DATA_FLUSH_SIZE: ${DATA_FLUSH_SIZE:-100}
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - aiops
+    restart: unless-stopped
+
+  trap-signals:
+    container_name: TrapSignals
+    image: ghcr.io/rberbatovci/traps-signals:latest
+    environment:
+      KAFKA_BROKER: kafka:9092
+      KAFKA_SIGNALS_TOPIC: trap-signals
+      DATA_FLUSH_INTERVAL: ${DATA_FLUSH_INTERVAL:-1}
+      DATA_FLUSH_SIZE: ${DATA_FLUSH_SIZE:-100}
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - aiops
+    restart: unless-stopped
+
+  trap-producer:
+    container_name: TrapProducer
+    image: ghcr.io/rberbatovci/traps-producer:latest
+    environment:
+      KAFKA_BROKER: kafka:9092
+      KAFKA_EVENTS_TOPIC: trap-events
+      KAFKA_SIGNALS_TOPIC: trap-signals
+      SNMP_AUTH_PASS: ${SNMP_AUTH_PASS}
+      SNMP_PRIV_PASS: ${SNMP_PRIV_PASS}
+      SNMP_USERNAME: ${SNMP_USERNAME}
+      SNMP_ENGINE_ID: ${SNMP_ENGINE_ID}
+      SNMP_TRAP_PORT: ${SNMP_TRAP_PORT}
+      DATA_FLUSH_INTERVAL: ${DATA_FLUSH_INTERVAL:-1}
+      DATA_FLUSH_SIZE: ${DATA_FLUSH_SIZE:-100}
+    ports:
+      - "1161:1161/udp"
+    volumes:
+      - shared-mibs:/app/traps/producer/mibs
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - aiops
+
+  trap-consumer:
+    container_name: TrapConsumer
+    image: ghcr.io/rberbatovci/traps-consumer:latest
+    environment:
+      KAFKA_BROKER: kafka:9092
+      KAFKA_EVENTS_TOPIC: trap-events
+      KAFKA_SIGNALS_TOPIC: trap-signals
+      DATA_FLUSH_INTERVAL: ${DATA_FLUSH_INTERVAL:-1}
+      DATA_FLUSH_SIZE: ${DATA_FLUSH_SIZE:-100}
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - aiops
+    restart: unless-stopped
+
+  netflow-producer:
+    container_name: NetflowProducer
+    image: ghcr.io/rberbatovci/netflow-producer:latest
+    ports:
+      - "1162:1162/udp"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - aiops
+
+  netflow-consumer:
+    container_name: NetflowConsumer
+    image: ghcr.io/rberbatovci/netflow-consumer:latest
+    depends_on:
+      kafka:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - aiops
+
+  telemetry-producer:
+    container_name: TelemetryProducer
+    image: ghcr.io/rberbatovci/telemetry-producer:latest
+    environment:
+      - KAFKA_BROKER=kafka:9092
+      - KAFKA_TOPIC=telemetry-topic
+    ports:
+      - "1163:1163"
+    env_file:
+      - .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      zookeeper:
+        condition: service_healthy
+    networks:
+      - aiops
+
+  cpu-util-stats:
+    container_name: CPUUtilStatistics
+    image: ghcr.io/rberbatovci/telemetry-cpu-util-stats:latest
+    depends_on:
+      kafka:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - aiops
+
+  memory-statistics:
+    container_name: MemoryStatistics
+    image: ghcr.io/rberbatovci/telemetry-memory-stats:latest
+    depends_on:
+      kafka:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - aiops
+      
+  interface-statistics:
+    container_name: InterfaceStatistics
+    image: ghcr.io/rberbatovci/telemetry-interface-stats:latest
+    depends_on:
+      kafka:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - aiops
+  
+volumes:
+  postgres_data:
+  opensearch-data1:
+  shared-mibs:
