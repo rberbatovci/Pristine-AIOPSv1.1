@@ -16,6 +16,7 @@ Pristine AIOps is a modern, modular platform for real-time network fault and per
 This project uses Docker Compose for production-ready deployment with all components pre-packaged and public containers available through the dhrc Docker registry.
 
 To get started:
+
 	git clone https://github.com/rberbatovci/Pristine-AIOPSv1.1.git
 	cd Pristine-AIOPSv1.1
 	docker-compose -f docker-compose.prod.yml up --build
