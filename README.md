@@ -60,18 +60,18 @@ View statistics and tag-based aggregations.
 Explore signals and understand fault propagation.
 
 🧪 In Development
-We're currently working on an Incidents Dashboard, which will:
+	We're currently working on an Incidents Dashboard, which will:
 
-Perform advanced signal correlation across multiple data sources.
+	Perform advanced signal correlation across multiple data sources.
 
-Classify incidents using ML-assisted logic.
+	Classify incidents using ML-assisted logic.
 
-Automatically notify teams through your preferred channels (email, Slack, etc.).
+	Automatically notify teams through your preferred channels (email, Slack, etc.).
 
 📚 Documentation
-Full documentation on creating regex rules, tagging strategies, and configuring correlation logic will be provided soon.
+	Full documentation on creating regex rules, tagging strategies, and configuring correlation logic will be provided soon.
 
 📬 Feedback & Contributions
-Have a feature request, bug report, or idea? Open an issue or contribute directly via a pull request. Community involvement is welcome!
+	Have a feature request, bug report, or idea? Open an issue or contribute directly via a pull request. Community involvement is welcome!
 
 Let me know if you want this broken into multiple sections (e.g., docs, guides) or want a badge section added.
