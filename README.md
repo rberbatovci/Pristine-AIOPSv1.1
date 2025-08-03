@@ -16,8 +16,9 @@ Pristine AIOps is a modern, modular platform for real-time network fault and per
 This project uses Docker Compose for production-ready deployment with all components pre-packaged and public containers available through the dhrc Docker registry.
 
 To get started:
-
-docker-compose -f docker-compose.prod.yml up --build
+	git clone https://github.com/rberbatovci/Pristine-AIOPSv1.1.git
+	cd Pristine-AIOPSv1.1
+	docker-compose -f docker-compose.prod.yml up --build
 
 ⚙️ Device Configuration
 To start monitoring your infrastructure, follow these steps for each network device:
@@ -60,13 +61,13 @@ View statistics and tag-based aggregations.
 Explore signals and understand fault propagation.
 
 🧪 In Development
-	We're currently working on an Incidents Dashboard, which will:
+We're currently working on an Incidents Dashboard, which will:
 
-	Perform advanced signal correlation across multiple data sources.
+Perform advanced signal correlation across multiple data sources.
 
-	Classify incidents using ML-assisted logic.
+Classify incidents using ML-assisted logic.
 
-	Automatically notify teams through your preferred channels (email, Slack, etc.).
+Automatically notify teams through your preferred channels (email, Slack, etc.).
 
 📚 Documentation
 	Full documentation on creating regex rules, tagging strategies, and configuring correlation logic will be provided soon.
