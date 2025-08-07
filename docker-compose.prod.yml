@@ -131,19 +131,6 @@ services:
     networks:
       - aiops
 
-  celery-worker:
-    container_name: CeleryWorker
-    image: ghcr.io/rberbato/celery:latest
-    build:
-      context: ./signals
-      dockerfile: Dockerfile.syslogSignals
-    command: celery -A tasks worker --loglevel=info
-    depends_on:
-      - redis
-      - kafka
-    networks:
-      - aiops
-
   syslog-producer:
     container_name: SyslogProducer
     image: ghcr.io/rberbatovci/syslog-producer:latest
