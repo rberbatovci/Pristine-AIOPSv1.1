@@ -228,8 +228,6 @@ services:
     env_file: .env
     ports:
       - "1163:1163"
-    env_file:
-      - .env
     depends_on:
       kafka:
         condition: service_healthy
