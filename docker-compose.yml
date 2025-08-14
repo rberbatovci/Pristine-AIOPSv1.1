@@ -109,9 +109,6 @@ services:
       nofile:
         soft: 65536
         hard: 65536
-    volumes:
-      - ./opensearch/config/opensearch.yml:/usr/share/opensearch/config/opensearch.yml
-      - ./opensearch/config/jvm.options:/usr/share/opensearch/config/jvm.options
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:9200/"]
       interval: 30s
