@@ -1,6 +1,7 @@
 ##### ACTIVELY DEVELOPING ####
 
 Pristine AIOps – Network Fault and Performance Monitoring
+
 Pristine AIOps is a modern, modular platform for real-time network fault and performance monitoring. It ingests and processes data from multiple sources—including Syslogs, SNMP Traps, NetFlow, and Model-Driven Telemetry—via Kafka pipelines to generate actionable insights and correlated signals.
 
 🚀 Features
