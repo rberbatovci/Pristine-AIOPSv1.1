@@ -22,7 +22,7 @@ To get started:
 
 	git clone https://github.com/rberbatovci/Pristine-AIOPSv1.1.git
 	cd Pristine-AIOPSv1.1
-	docker-compose -f docker-compose.prod.yml up --build
+	docker compose up -d --build
 
 ⚙️ Device Configuration
 To start monitoring your infrastructure, follow these steps for each network device:
