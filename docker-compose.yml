@@ -25,7 +25,7 @@ services:
     container_name: ReactJS
     image: ghcr.io/rberbatovci/frontend:latest
     ports:
-      - "80:80"
+      - "3000:80"
     volumes:
       - ./frontend:/app
     environment:
