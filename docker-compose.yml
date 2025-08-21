@@ -206,7 +206,7 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-      opensearch:
+      opensearch-node1:
         condition: service_healthy
       postgresql:
         condition: service_healthy
@@ -280,7 +280,7 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-      opensearch:
+      opensearch-node1:
         condition: service_healthy
     restart: unless-stopped
     networks:
