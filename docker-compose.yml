@@ -92,13 +92,14 @@ services:
     networks:
       - aiops
 
-  opensearch:
-    image: opensearchproject/opensearch:1.0.1
-    container_name: OpenSearch
+  opensearch-node1:
+    image: opensearchproject/opensearch:3.1.0
+    container_name: opensearch-node1
     environment:
       - cluster.name=opensearch-cluster
       - node.name=opensearch-node1
-      - discovery.type=single-node
+      - discovery.seed_hosts=opensearch-node1,opensearch-node2,opensearch-node3
+      - cluster.initial_master_nodes=opensearch-node1,opensearch-node2,opensearch-node3
       - bootstrap.memory_lock=true
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
       - DISABLE_SECURITY_PLUGIN=true
@@ -106,17 +107,83 @@ services:
       memlock:
         soft: -1
         hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
+    volumes:
+      - opensearch-data1:/usr/share/opensearch/data
+    ports:
+      - "9200:9200"   # REST API
+      - "9600:9600"   # Performance Analyzer
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:9200/"]
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
+    networks:
+      - aiops
+
+  opensearch-node2:
+    image: opensearchproject/opensearch:3.1.0
+    container_name: opensearch-node2
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node2
+      - discovery.seed_hosts=opensearch-node1,opensearch-node2,opensearch-node3
+      - cluster.initial_master_nodes=opensearch-node1,opensearch-node2,opensearch-node3
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - DISABLE_SECURITY_PLUGIN=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - opensearch-data2:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - aiops
+
+  opensearch-node3:
+    image: opensearchproject/opensearch:3.1.0
+    container_name: opensearch-node3
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node3
+      - discovery.seed_hosts=opensearch-node1,opensearch-node2,opensearch-node3
+      - cluster.initial_master_nodes=opensearch-node1,opensearch-node2,opensearch-node3
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - DISABLE_SECURITY_PLUGIN=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - opensearch-data3:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - aiops
+
+  dashboards:
+    image: opensearchproject/opensearch-dashboards:3.1.0
+    container_name: opensearch-dashboards
+    environment:
+      OPENSEARCH_HOSTS: '["https://opensearch-node1:9200","https://opensearch-node2:9200","https://opensearch-node3:9200"]'
+      OPENSEARCH_USERNAME: ${OPENSEARCH_USERNAME}
+      OPENSEARCH_PASSWORD: ${OPENSEARCH_PASSWORD}
+      OPENSEARCH_SSL_VERIFICATIONMODE: none
+    depends_on: 
+      - opensearch-node1
+      - opensearch-node2
+      - opensearch-node3
     ports:
-      - 9200:9200
-      - 9600:9600
+      - "5601:5601"
     networks:
       - aiops
 
