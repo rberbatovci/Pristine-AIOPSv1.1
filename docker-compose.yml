@@ -307,7 +307,7 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-      opensearch:
+      opensearch-node1:
         condition: service_healthy
     restart: unless-stopped
     networks:
@@ -320,7 +320,7 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-      opensearch:
+      opensearch-node1:
         condition: service_healthy
     restart: unless-stopped
     networks:
@@ -333,7 +333,7 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-      opensearch:
+      opensearch-node1:
         condition: service_healthy
     restart: unless-stopped
     networks:
