@@ -338,6 +338,34 @@ services:
     restart: unless-stopped
     networks:
       - aiops
+
+  gobgp:
+    container_name: GoBGPServer
+    image: ghcr.io/rberbatovci/gobgp-server:latest
+    env_file:
+      - .env
+    ports:
+      - "179:179"
+      - "50051:50051"
+    networks:
+      - aiops
+    healthcheck:
+      test: ["CMD-SHELL", "grpc_health_probe -addr=gobgp:50051"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  topology-producer:
+    container_name: TopologyProducer
+    image: ghcr.io/rberbatovci/topology-producer:latest
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      zookeeper:
+        condition: service_healthy
+    networks:
+      - aiops
   
 volumes:
   postgres_data:
