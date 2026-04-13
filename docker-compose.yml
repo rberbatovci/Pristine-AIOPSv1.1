@@ -417,7 +417,7 @@ services:
 
   trap-signals:
     container_name: TrapSignals
-    image: ghcr.io/rberbatovci/trap-signals:latest 
+    image: ghcr.io/rberbatovci/traps-signals:latest 
     env_file:
       - .env
     depends_on:
@@ -457,7 +457,7 @@ services:
 
   trap-producer:
     container_name: TrapProducer
-    image: ghcr.io/rberbatovci/trap-producer:latest 
+    image: ghcr.io/rberbatovci/traps-producer:latest 
     environment:
       SNMP_AUTH_PASS: ${SNMP_AUTH_PASS}
       SNMP_PRIV_PASS: ${SNMP_PRIV_PASS}
@@ -480,7 +480,7 @@ services:
 
   trap-consumer:
     container_name: TrapConsumer
-    image: ghcr.io/rberbatovci/trap-consumer:latest 
+    image: ghcr.io/rberbatovci/traps-consumer:latest 
     env_file:
       - .env
     depends_on:
