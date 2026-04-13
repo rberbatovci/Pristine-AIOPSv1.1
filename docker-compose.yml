@@ -74,7 +74,7 @@ services:
   ############################################
   frontend:
     container_name: react
-    image: ghcr.io/rberbatovci/backend:latest 
+    image: ghcr.io/rberbatovci/frontend:latest 
     depends_on:
       - backend
       - keycloak
