@@ -46,7 +46,7 @@ services:
   ############################################
   backend:
     #container_name: fastapi
-    image: ghcr.io/rberbato/backend:latest 
+    image: ghcr.io/rberbatovci/backend:latest 
     expose:
       - "8000"
     networks:
@@ -74,7 +74,7 @@ services:
   ############################################
   frontend:
     container_name: react
-    image: ghcr.io/rberbato/backend:latest 
+    image: ghcr.io/rberbatovci/backend:latest 
     depends_on:
       - backend
       - keycloak
@@ -93,7 +93,7 @@ services:
   ############################################
   keycloak:
     container_name: keycloak
-    image: ghcr.io/rberbato/keycloak:latest  
+    image: ghcr.io/rberbatovci/keycloak:latest  
     command:
       - start
       - --import-realm
@@ -364,7 +364,7 @@ services:
 
   syslog-producer:
     container_name: SyslogProducer
-    image: ghcr.io/rberbato/syslog-producer:latest 
+    image: ghcr.io/rberbatovci/syslog-producer:latest 
     environment:
       SYSLOG_PORT: ${SYSLOG_PORT:-1160}
     env_file:
@@ -381,7 +381,7 @@ services:
 
   syslog-consumer:
     container_name: SyslogConsumer
-    image: ghcr.io/rberbato/syslog-consumer:latest 
+    image: ghcr.io/rberbatovci/syslog-consumer:latest 
     env_file:
       - .env
     depends_on:
@@ -397,7 +397,7 @@ services:
 
   syslog-signals:
     container_name: SyslogSignals
-    image: ghcr.io/rberbato/syslog-signals:latest 
+    image: ghcr.io/rberbatovci/syslog-signals:latest 
     env_file:
       - .env
     depends_on:
@@ -417,7 +417,7 @@ services:
 
   trap-signals:
     container_name: TrapSignals
-    image: ghcr.io/rberbato/trap-signals:latest 
+    image: ghcr.io/rberbatovci/trap-signals:latest 
     env_file:
       - .env
     depends_on:
@@ -437,7 +437,7 @@ services:
 
   #poll-producer:
   #  container_name: PollProducer
-    #image: ghcr.io/rberbato/poll-producer:latest
+    #image: ghcr.io/rberbatovci/poll-producer:latest
   #  build:
   #    context: .
   #    dockerfile: ./dockerfiles/Dockerfile.poll-producer
@@ -457,7 +457,7 @@ services:
 
   trap-producer:
     container_name: TrapProducer
-    image: ghcr.io/rberbato/trap-producer:latest 
+    image: ghcr.io/rberbatovci/trap-producer:latest 
     environment:
       SNMP_AUTH_PASS: ${SNMP_AUTH_PASS}
       SNMP_PRIV_PASS: ${SNMP_PRIV_PASS}
@@ -480,7 +480,7 @@ services:
 
   trap-consumer:
     container_name: TrapConsumer
-    image: ghcr.io/rberbato/trap-consumer:latest 
+    image: ghcr.io/rberbatovci/trap-consumer:latest 
     env_file:
       - .env
     depends_on:
@@ -496,7 +496,7 @@ services:
 
   netflow-producer:
     container_name: NetflowProducer
-    image: ghcr.io/rberbato/netflow-producer:latest 
+    image: ghcr.io/rberbatovci/netflow-producer:latest 
     ports:
       - "1162:1162/udp"
     env_file:
@@ -511,7 +511,7 @@ services:
 
   netflow-consumer:
     container_name: NetflowConsumer
-    image: ghcr.io/rberbato/netflow-consumer:latest 
+    image: ghcr.io/rberbatovci/netflow-consumer:latest 
     depends_on:
       kafka:
         condition: service_healthy
@@ -543,7 +543,7 @@ services:
  
   telemetry-producer:
     container_name: TelemetryProducer
-    image: ghcr.io/rberbato/telemetry-producer:latest 
+    image: ghcr.io/rberbatovci/telemetry-producer:latest 
     environment:
       - KAFKA_BROKER=kafka:9092
       - KAFKA_TOPIC=telemetry-topic
@@ -563,7 +563,7 @@ services:
 
   cpu-util-stats:
     container_name: CPUUtilStatistics
-    image: ghcr.io/rberbato/telemetry-cpu-util-stats:latest 
+    image: ghcr.io/rberbatovci/telemetry-cpu-util-stats:latest 
     depends_on:
       kafka:
         condition: service_healthy
@@ -579,7 +579,7 @@ services:
 
   memory-statistics:
     container_name: MemoryStatistics
-    image: ghcr.io/rberbato/telemetry-memory-stats:latest 
+    image: ghcr.io/rberbatovci/telemetry-memory-stats:latest 
     depends_on:
       kafka:
         condition: service_healthy
@@ -593,7 +593,7 @@ services:
       
   interface-oper-status:
     container_name: InterfaceOperStatus
-    image: ghcr.io/rberbato/telemetry-interface-oper-status:latest 
+    image: ghcr.io/rberbatovci/telemetry-interface-oper-status:latest 
     depends_on:
       kafka:
         condition: service_healthy
@@ -607,7 +607,7 @@ services:
 
   interface-statistics:
     container_name: InterfaceStatistics
-    image: ghcr.io/rberbato/telemetry-interface-stats:latest 
+    image: ghcr.io/rberbatovci/telemetry-interface-stats:latest 
     depends_on:
       kafka:
         condition: service_healthy
@@ -621,7 +621,7 @@ services:
 
   bgp-connection-statistics:
     container_name: BGPConnectionStatistics
-    image: ghcr.io/rberbato/telemetry-interface-stats:latest 
+    image: ghcr.io/rberbatovci/telemetry-interface-stats:latest 
     depends_on:
       kafka:
         condition: service_healthy
